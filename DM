@@ -1,0 +1,97 @@
+#include<bits/stdc++.h>
+
+using namespace std;
+const int MAXN = 1e5;
+int in[MAXN]; // record indegree
+string course[MAXN]; // course
+set<int> edges[MAXN]; // lines between courses
+map<string, int> c_n; // course and code
+int nstu = 0; // the number of student
+int n_course = 0; // the number of course
+int cnt = 0;
+set<int> cc;
+
+void init() {
+    memset(in, -1, sizeof(in));
+    fill(course, course + MAXN, "");
+    for (auto it : edges) it.clear();
+    c_n.clear();
+    cc.clear();
+    nstu = 0;
+    n_course = 0;
+    cnt = 0;
+}
+
+void c_set() {
+    cin >> n_course;
+    for (int i = 0; i < n_course; i++) {
+        cin >> course[i];
+        c_n[course[i]] = i;
+    }
+}
+
+void stu_c() {
+    cin >> nstu;
+    for (int i = 0; i < nstu; i++) {
+        int n;
+        cin >> n;
+        vector<string> v;
+        for (int j = 0; j < n; j++) {
+            string t;
+            cin >> t;
+            v.push_back(t);
+        }
+        for (int j = 0; j < n; j++) {
+            for (int k = 0; k < n; k++) {
+                if (j != k)
+                    edges[c_n[v[j]]].insert(c_n[v[k]]);
+            }
+        }
+    }
+    for (int i = 0; i < n_course; i++) {
+        int num = c_n[course[i]];
+        in[num] = edges[num].size();
+    }
+}
+void del(int &valid, int maxx) {
+    in[maxx] = -1;
+    valid++;
+}
+void solve() {
+    int valid = 0;
+    for (int i = 0; i < n_course; i++) cc.insert(i);
+    while (valid != n_course) {
+        long long num = max_element(in, in + n_course) - in;
+        del(valid, num);
+        cnt++;
+        set<int> temp = edges[num];
+        temp.insert(num);
+        set<int> diff;
+        set_difference(cc.begin(), cc.end(), temp.begin(), temp.end(), inserter(diff, diff.begin()));
+        while (!diff.empty() && diff.size() < n_course) {
+            int maxx = -1;
+            for (int it : diff) {
+                if (in[it] > maxx) maxx = it;
+            }
+            if (maxx==-1) break;
+            diff.clear();
+            del(valid, maxx);
+            set<int> temp1 = edges[maxx];
+            temp.insert(maxx);
+            set_union(temp.begin(), temp.end(), temp1.begin(), temp1.end(), inserter(temp, temp.end()));
+            set_difference(cc.begin(), cc.end(), temp.begin(), temp.end(), inserter(diff, diff.begin()));
+        }
+    }
+}
+
+int main() {
+    int T;
+    cin >> T;
+    while (T--) {
+        init();
+        c_set();
+        stu_c();
+        solve();
+        cout << cnt << endl;
+    }
+}
